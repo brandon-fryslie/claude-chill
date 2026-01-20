@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install cross-compilation targets
+        run: |
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add aarch64-unknown-linux-gnu
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+
+      - name: Build binaries
+        run: |
+          # Linux x86_64
+          cargo build --release --target x86_64-unknown-linux-gnu
+          cp target/x86_64-unknown-linux-gnu/release/claude-chill claude-chill-linux-amd64
+
+          # Linux ARM64
+          cargo build --release --target aarch64-unknown-linux-gnu
+          cp target/aarch64-unknown-linux-gnu/release/claude-chill claude-chill-linux-arm64
+
+          # macOS x86_64
+          cargo build --release --target x86_64-apple-darwin
+          cp target/x86_64-apple-darwin/release/claude-chill claude-chill-darwin-amd64
+
+          # macOS ARM64
+          cargo build --release --target aarch64-apple-darwin
+          cp target/aarch64-apple-darwin/release/claude-chill claude-chill-darwin-arm64
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            claude-chill-linux-amd64
+            claude-chill-linux-arm64
+            claude-chill-darwin-amd64
+            claude-chill-darwin-arm64
+          generate_release_notes: true
