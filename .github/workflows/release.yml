@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     name: Build and Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,23 +21,14 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-
-      - name: Build binaries
+      - name: Build binary
         run: |
-          # Linux x86_64
-          cargo build --release --target x86_64-unknown-linux-gnu
-          cp target/x86_64-unknown-linux-gnu/release/claude-chill claude-chill-linux-amd64
-
-          # Linux ARM64 (using cross for cross-compilation)
-          cross build --release --target aarch64-unknown-linux-gnu
-          cp target/aarch64-unknown-linux-gnu/release/claude-chill claude-chill-linux-arm64
+          cargo build --release
+          cp target/release/claude-chill claude-chill-linux-arm64
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            claude-chill-linux-amd64
             claude-chill-linux-arm64
           generate_release_notes: true
